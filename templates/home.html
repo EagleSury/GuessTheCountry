@@ -1,0 +1,38 @@
+<html lang="en">
+
+<head>
+    <h1 style="color: teal ;">Guess The Country!!</h1>
+    <title>Guess the Country!</title>
+</head>
+
+<body style="background-color: rgb(202, 212, 185)">
+    <p class="centered" style="align-self: center; align-items: center;">
+    <h2>Welcome to Guess The Country!</h2>
+    <h3>These are the basic instructions:</h3>
+    I will show you a flag,
+    and you will have 5 different countries to choose from,
+    Pick the right one - and you win!!!
+    <br />
+    After each guess, I will tell you if it was right or wrong... <br /><br />
+    <b>Do you think you can do it?</b><br /><br />
+    </p>
+    <button type="button" class="centered" id="startButton"
+        style="color: teal; width: 500; height: 50;font-size: medium; background-color: greenyellow;">Start
+        Game</button><br />
+    <form id="guessForm" style="display: none; align-self: center;" method="POST" action="/guess" class="centered">
+        <br /><br />
+        <input type="number" class="centered" name="guess" placeholder="Enter your guess (0-9)"
+            style="text-align: center; width: 100;">
+        <button type="submit" class="centered">Guess</button>
+    </form>
+    <script>
+        const startButton = document.getElementById("startButton");
+        const guessForm = document.getElementById("guessForm");
+
+        startButton.addEventListener("click", function () {
+            guessForm.style.display = "block";
+        });
+    </script>
+</body>
+
+</html>
