@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Flag Guessing Game</title>
+    <style>
+        .choices {
+                width: 33%-5px;
+                background-color: rgb(191, 84, 163);
+                text-align: center;
+                margin: 5px;
+                border: #000;
+                font-weight: 800;
+                color:rgb(105, 13, 80);
+            }
+        .country {
+            background-color:white;
+            border: #000;
+            color: #000;
+
+        }
+		.grid-container {
+	  		display: grid;
+            height:25%;
+	  		grid-template-columns: 1fr 1fr 1fr;
+            gap: 20px
+			}
+        
+        .grid-item {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+        }
+        img {
+            width: 200px;
+            height: 150px;
+        }
+        #message {
+            font-weight: bold;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body style="background-color: #d7a0c3;">
+    <h1 style="color: rgb(169, 50, 137)">Flag Guessing Game</h1>
+
+	<p style="color:rgb(169, 50, 137); font-size: 18; font-weight:bold">Guess the right country!!!</p>
+    
+	<div class="grid-container">
+
+		<div class='grid-item' style="background-color:rgb(169, 50, 137);">
+            <form method='POST' action='/'>
+                <button type="submit" style="height: 200px;width:200px; background-color:rgb(105, 13, 80); color: #d7a0c3; font-size:32; font-weight:1000">New Round!!!</button>
+            </form>
+		</div>
+
+		<div class='grid-item'>
+            <img src="{{ flag }}" alt="Flag">
+            <br/></div>
+
+		<div class='grid-item' style="background-color:rgb(169, 50, 137); color:rgb(96, 9, 73);">
+			<h2 style="font-size: 26; font-weight: 1000;">{{ message }}</h2>
+		</div>
+
+	</div>
+    
+<p style="margin-top:50px; color: rgb(31, 1, 21); font-weight: 800;font-size: 18;">Do you know whose flag this is????</p>
+		
+
+<form method="POST" action="/guess">
+    <div class="choices" style="display:flex; justify-content: center;align-items: center; height:70px">
+        {% for country in countries %}
+        <div class='choices'>
+        <input type = radio class='country' name='chosen_country' id ={{ country }} value="{{ country }}" >
+        <label for={{ country }}>{{ country }}</label>
+        </div>
+        {% endfor %}
+    </div>
+    <button type="submit" style="height: 40px; width: 200px; margin-top: 20px; background-color:rgb(105, 13, 80); color: #d7a0c3;font-size:larger; font-weight:1000" {{ disabled }}>Guess</button>
+</form>
+</body>
+</html>

@@ -1,0 +1,417 @@
+json
+
+const puppeteer = require('puppeteer-core');
+
+(async() => {
+    const browser = await puppeteer.connect({ browserWSEndpoint: 'wss://chrome.browserless.io?token=YOUR_API_KEY' }); //connect to browserless
+
+    const page = await browser.newPage();
+    await page.setViewport({
+      width: 1920,
+      height: 1080
+  })
+    const url = "https://en.wikipedia.org/wiki/Carl_Linnaeus";
+    await page.setViewport({ width: 1400, height: 1020 }),
+    await page.goto(url, { waitUntil: 'load' });
+    const myData = await page.evaluate(() => {
+        let obj = {};
+        const title = document.querySelector('.mw-page-title-main').innerHTML,
+            ps = [...document.querySelectorAll('#mw-content-text > div.mw-parser-output > p')],
+            p = ps.map(el => el.textContent).filter(value => value.length > 15),
+            tbody = document.querySelector('.infobox tbody'),
+            trs = Array.from(tbody.querySelectorAll('tr')),
+            infocontent = [],
+            ic = { data: {} };
+        return trs.forEach((value, i) => {
+            if (0 !== i) {
+                const td = [...value.querySelectorAll('td,th')],
+                    tds = td.map(el => null !== el.querySelector('a.image') ? el.querySelector('a.image').href : el.textContent),
+                    data = tds.map(td => td),
+                    key = data[0] || '1';
+                let islink = !1;
+                key.includes('https://') && (islink = !0);
+                const val = data[1] || '1';
+                void 0 === data[1] ? islink && infocontent.push({ key: key }) : ic.data[key] = val
+            }
+        }), ic.imgs = infocontent, obj = { ...obj, title: title, infobox: ic, paragraphs: p }, obj
+    });
+    browser.close();
+    return { data: myData, type: 'text/plain' }
+
+})();
+
+
+
+home.html
+
+
+<html>
+
+<head>
+    <title></title>
+</head>
+
+<body>
+    <h1 style="text-align: center;"><span style="color:#4B0082;">Guess the Country!!!</span></h1>
+
+    <h2 style="text-align: center;"><span style="color:#800080;">Welcome!</span></h2>
+
+    <p style="text-align: center;"><span style="color:#EE82EE;">I will show you a flag and you will pick which one of
+            the 5 countries I will show you it is from...</span></p>
+
+    <p style="text-align: center;"><span style="color:#B22222;">Do you know your flags????</span></p>
+
+    <p style="text-align: center;"><span style="color:#B22222;"><span style="background-color:#8B4513;"><input
+                    name="play" type="button" value="Start!!" /></span></span></p>
+</body>
+
+</html>
+
+
+
+result.html
+
+<html>
+
+<head>
+    <title></title>
+</head>
+
+<body>
+    <h1 style="text-align: center;"><span style="color:#4B0082;">'You ' + result</span></h1>
+
+    <h2 style="text-align: center;"><span style="color:#800080;">'The correct answer was... ' + answer + '!!!'</span></h2>
+
+    <h4 style="text-align: center;"><span style="color:#EE82EE;">message</span></h4>
+
+    <h3 style="text-align: center;"><span style="color:#B22222;">Do you want to give it another try?</span></h3>
+
+    <p style="text-align: center;"><span style="color:#B22222;"><input name="play" type="button"
+                value="Let's Play!!" /></span></p>
+</body>
+
+</html>
+
+
+round.html
+
+
+
+<html>
+
+<head>
+    <title></title>
+</head>
+
+<body>
+    <h1 style="text-align: center;"><span style="color: rgb(75, 0, 130);">Guess the Country!!!</span></h1>
+
+    <p style="text-align: center;"><span style="color: rgb(75, 0, 130);"><img alt="" id="Flag" src="{ flag }"
+                style="width: 90px; height: 60px; margin: 20px 100px;" /></span></p>
+
+    <h2 style="text-align: center;"><span style="color:#800000;"><input name="{ choices[1] }" type="submit"
+                value="Country1" /></span></h2>
+
+    <p style="text-align: center;"><span style="color:#8B4513;"><input name="Choice2" type="submit"
+                value="Country2" /></span></p>
+
+    <p style="text-align: center;"><span style="color:#2F4F4F;"><input name="Choice3" type="submit"
+                value="Country3" /></span></p>
+
+    <p style="text-align: center;"><span style="color:#008080;"><input name="Choice4" type="submit"
+                value="Country4" /></span></p>
+
+    <p style="text-align: center;"><span style="color:#000080;"><input name="Choice5" type="submit"
+                value="Country5" /></span></p>
+
+    <p style="text-align: center;">&nbsp;</p>
+</body>
+
+</html>
+
+
+app.py
+'''
+
+
+
+
+def web_scraping():
+    url = "https://en.wikipedia.org/wiki/Gallery_of_sovereign_state_flags"
+    response = requests.get(url)
+    soup = BeautifulSoup(response.text, 'html.parser')
+
+    flags_dict = {}
+    for img in soup.find_all('img'):
+        if 'Flag' in img['src']:
+            country_name = img['alt']
+            flag_url = 'https:' + img['src']
+            flags_dict[country_name] = flag_url
+
+    return flags_dict
+
+'''
+
+
+
+AI:
+
+
+python:
+
+from flask import Flask, render_template, request, jsonify
+import random
+import sqlite3
+import requests
+from bs4 import BeautifulSoup
+import sqlite3
+from flask import Flask, jsonify
+
+
+def scrape_flags():
+    url = "https://en.wikipedia.org/wiki/Gallery_of_sovereign_state_flags"
+    response = requests.get(url)
+    soup = BeautifulSoup(response.content, 'html.parser')
+
+    # Find all image tags
+    images = soup.find_all('img')
+
+    # Create a SQLite database
+    conn = sqlite3.connect('flags.db')
+    cursor = conn.cursor()
+    cursor.execute('CREATE TABLE IF NOT EXISTS flags (country TEXT, flag_url TEXT)')
+
+    for img in images:
+        alt_text = img.get('alt')
+        if alt_text and 'flag' in alt_text:
+            country = alt_text.replace('Flag of ', '')
+            flag_url = img['src']
+            cursor.execute('INSERT INTO flags VALUES (?, ?)', (country, flag_url))
+
+    conn.commit()
+    conn.close()
+
+def print_database():
+    conn = sqlite3.connect('flags.db')
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM flags")
+    rows = cursor.fetchall()
+    for row in rows:
+        print(row)
+    conn.close()
+
+
+def get_random_flag_and_options():
+    with sqlite3.connect('flags.db') as conn:
+        cursor = conn.cursor()
+        cursor.execute("SELECT * FROM flags")
+        all_flags = cursor.fetchall()
+
+        print(all_flags)
+        
+        # Choose a random flag
+        random_flag_index = random.randint(0, len(all_flags) - 1)
+        random_flag = all_flags[random_flag_index]
+
+        # Create a list of options with the correct answer at a random position
+        options = [random_flag[0]] * 5  # Fill with correct answer initially
+        for i in range(1, 5):
+            random_option_index = random.randint(0, len(all_flags) - 1)
+            while random_option_index == random_flag_index:
+                random_option_index = random.randint(0, len(all_flags) - 1)
+            options[i] = all_flags[random_option_index][0]
+
+        random.shuffle(options)  # Shuffle the options list
+
+    return random_flag[0], random_flag[1], options
+
+app = Flask(__name__)
+
+@app.route('/flags')
+def get_flags():
+    conn = sqlite3.connect('flags.db')
+    cursor = conn.cursor()
+    cursor.execute('SELECT * FROM flags')
+    flags = cursor.fetchall()
+    conn.close()
+    return jsonify(flags)
+
+
+@app.route('/')
+def index():
+    flag, flag_url, options = get_random_flag_and_options()
+    return render_template('base.html', flag=flag_url, options=options)
+
+@app.route('/check_guess', methods=['POST'])
+def check_guess():
+    user_guess = request.form['guess']
+    flag, flag_url, options = get_random_flag_and_options()  # Get new flag and options
+
+    message = "Wrong! The correct country is " + flag
+    if user_guess == flag:
+        message = "Correct! You guessed the right flag."
+
+    return jsonify({'message': message})
+
+if __name__ == '__main__':
+    # app.run(debug=True)
+    scrape_flags()
+    print_database()
+
+
+
+
+guess the country.py
+
+
+
+import random
+from flask import Flask, render_template, request, session
+
+app = Flask(__name__)
+
+# 1 create a function that does the webscraping
+
+# 2 function that chooses a random flag and 4 random countries
+def round_elements(country_flags):  # setting the values for all elements of a round
+    # line to read in country_flags from sqllite file
+    choice = random.randint(0, len(country_flags)-1)  # getting a random index for the correct flag-country pair for this round
+    session['correct_place'] = random.randint(0,4)  # getting a random location on the board to display the correct country
+    session['flag'] = country_flags['Flag'][choice]  # setting the flag picture
+    choices = 5*[None]  # list to store the 5 choices for the round
+    choices[session['correct_place']] = country_flags['Country'][choice]  # setting the random location to equal the chosen country's name
+    for i in choices:  # going through the list (in order to fill it up)
+        if i is None:  # avoiding overriding the chosen country
+            while True: # loop to choose a random number that's not already in the list
+                new = random.randint(0, len(country_flags)-1)  # choosing a new random number
+                if new not in choices:  # avoiding duplicate choices
+                    choices[i] = country_flags['Country'][new]  # storing the new option (the country name) into the list
+                    break  # breaking out of the while loop once a unique value was found
+    session[choices] = choices
+    '''
+    I end up with:
+    1. flag = web url with pic of chosen flag
+    2. choices = list with 5 country names
+    3. correct_place = the index where the country name of the chosen flag is in 'choices'  (choices[correct_place] = flag's country name)
+    '''
+
+
+# 3 open html rendered with 2
+
+
+
+
+@app.post("/play")  # need to figure out how to call this when user presses play button - on both the home page and result page
+def round():
+    return render_template("round.html", flag = session['flag'], choices = session['choices'])
+
+# 4 function that gets the input
+@app.post("/guess")
+def guess():
+    guess = request.form["guess"] # figure out how to save what button user pressed
+    if guess in session['choices']:
+        if guess == session['choices'['correct_place']]:
+            message = "You Win!!!"
+        else:
+            message = "You lose... :("
+    else:
+        message = "Oops! Something went wrong... Don't worry, you might have gotten it right! ;)"
+    return render_template("result.html", message = message, country = session['choices'['correct_place']])
+
+
+# 5 function that checks if the input (from 4) is right or wrong and calls 6 with the appropiate message
+
+# 6 opens html rendered with 5
+
+
+
+
+
+if __name__ == "__main__":
+    app.run(debug=True, use_reloader=True , port=5002)
+
+
+
+test
+
+
+import sqlite3
+
+def check_flag_exists(country):
+    """Checks if a flag for the given country exists in the database.
+
+    Args:
+        country: The country name.
+
+    Returns:
+        True if the flag exists, False otherwise.
+    """
+    with sqlite3.connect('flags.db') as conn:
+        cursor = conn.cursor()
+        cursor.execute("SELECT COUNT(*) FROM flags WHERE country = ?", (country,))
+        result = cursor.fetchone()[0]
+        return result > 0
+
+
+    '''connection = sqlite3.connect("database.db")
+    cursor = connection.cursor()
+    cursor.execute("create table if not exists flags (Country text, Flag text)")
+    for img in images:
+        alt = img.get("alt")
+        if alt and 'flag' in alt:
+            country = alt
+            flag = img['src']
+            cursor.execute('insert into flags values (?, ?)', (country, flag))
+
+    connection.commit()
+    connection.close()'''
+
+
+    base.html
+    <!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Flag Guessing Game</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+        }
+        img {
+            width: 200px;
+            height: 150px;
+        }
+        #message {
+            font-weight: bold;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Flag Guessing Game</h1>
+    <img src="{{ flag }}" alt="Flag">
+    <br>
+    <form method="POST" action="/check_guess">
+        <label for="guess">Guess the country:</label>
+        <select name="guess" id="guess">
+            {% for option in options %}
+                <option value="{{ option }}">{{ option }}</option>
+            {% endfor %}
+        </select>
+        <br>
+        <button type="submit">Guess</button>
+    </form>
+    <p id="message"></p>
+    <script>
+        const messageElement = document.getElementById('message');
+
+        // Update message on AJAX response
+        fetch('/check_guess', {method: 'POST'})
+            .then(response => response.json())
+            .then(data => {
+                messageElement.textContent = data.message;
+            });
+    </script>
+</body>
+</html>
