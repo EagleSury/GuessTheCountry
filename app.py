@@ -146,5 +146,5 @@ def guess():
 
 if __name__ == "__main__":
     # db.create_all() # - function to create the tables in the db - only need to run this once.
-    insert_data() # - calls the function to fill the db - only run it when you want to update the db.
-    app.run(debug=True)
+    # insert_data() # - calls the function to fill the db - only run it when you want to update the db.
+    app.run(port=5001, debug=True )
